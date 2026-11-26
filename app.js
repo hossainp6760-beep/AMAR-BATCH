@@ -55,7 +55,9 @@
       const pw = document.getElementById('pw').value;
       const { error } = await sb.auth.signInWithPassword({ email: `${sid}@${cfg.EMAIL_DOMAIN}`, password: pw });
       if (error) { document.getElementById('err').textContent = t('badLogin'); return; }
-      await boot(); location.hash = '#/home';
+      await boot();
+      if (!me) { document.getElementById('err').textContent = 'Profile error: ' + (window.__bootErr || 'unknown'); return; }
+      if (location.hash === '#/home') render(); else location.hash = '#/home';
     };
   }
 
@@ -147,8 +149,9 @@
   async function boot() {
     const { data } = await sb.auth.getSession();
     if (!data.session) { me = null; return; }
-    const { data: p } = await sb.from('profiles').select('*').eq('id', data.session.user.id).single();
-    me = p; if (p && (p.lang === 'bn' || p.lang === 'en') && !localStorage.getItem('amb_lang')) lang = p.lang;
+    const { data: p, error } = await sb.from('profiles').select('*').eq('id', data.session.user.id).maybeSingle();
+    window.__bootErr = error ? (error.message || String(error)) : (p ? '' : 'NO_PROFILE_ROW');
+    me = p; try { if (p && (p.lang === 'bn' || p.lang === 'en') && !localStorage.getItem('amb_lang')) lang = p.lang; } catch (e) {}
   }
   async function render() {
     const h = location.hash.replace(/^#\/?/, '') || 'splash'; const [r, id] = h.split('/');
