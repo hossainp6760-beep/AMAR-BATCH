@@ -23,10 +23,10 @@
   };
   window.__setLang = setLang;
 
-  const toggle = () => `<div class="tog"><button class="${lang === 'bn' ? 'on' : ''}" onclick="__setLang('bn')">বাংলা</button><button class="${lang === 'en' ? 'on' : ''}" onclick="__setLang('en')">English</button></div>`;
+  const toggle = (light) => `<div class="tog${light ? ' light' : ''}"><button class="${lang === 'bn' ? 'on' : ''}" onclick="__setLang('bn')">বাংলা</button><button class="${lang === 'en' ? 'on' : ''}" onclick="__setLang('en')">English</button></div>`;
   const BOOK = (w) => `<svg width="${w}" height="${w * 0.78}" viewBox="0 0 72 56" aria-label="logo"><path d="M36 12C30 7 18 5 6 8V46C18 43 30 45 36 50Z" fill="#fff"/><path d="M36 12C42 7 54 5 66 8V46C54 43 42 45 36 50Z" fill="#CFE0FF"/><path d="M13 18c6-1 11 0 16 2M13 26c6-1 11 0 16 2M13 34c6-1 11 0 16 2M59 18c-6-1-11 0-16 2M59 26c-6-1-11 0-16 2M59 34c-6-1-11 0-16 2" fill="none" stroke="#2B6FE0" stroke-width="2.2" stroke-linecap="round"/></svg>`;
 
-  const tabs = (on) => `<nav>${[['home', '⌂', 'home'], ['classes', '▶', 'classes'], ['hw', '✎', 'hw']].map(([r, i, k]) => `<a href="#/${r}" class="${on === r ? 'on' : ''}"><b>${i}</b>${t(k)}</a>`).join('')}<a href="#/logout"><b>⎋</b>${t('logout')}</a></nav>`;
+  const tabs = (on) => `<nav>${[['home', '⌂', 'home'], ['classes', '▶', 'classes'], ['hw', '✎', 'hw'], ['batches', '☰', 'batches']].map(([r, i, k]) => `<a href="#/${r}" class="${on === r ? 'on' : ''}"><b>${i}</b>${t(k)}</a>`).join('')}<a href="#/logout"><b>⎋</b>${t('logout')}</a></nav>`;
   const top = (title, sub, back) => `<div class="top"><div class="row">${back ? `<a href="#/${back}" style="color:#C9D3F0;text-decoration:none;font-weight:600">‹ ${t('back')}</a>` : ''}<div class="sp"></div>${toggle()}</div><h1>${esc(title)}</h1>${sub ? `<div class="sub">${esc(sub)}</div>` : ''}</div>`;
   const statusPill = (s, due) => {
     if (!s) return due && new Date(due) < new Date() ? `<span class="pill p-bad">${t('late')}</span>` : `<span class="pill p-warn">${t('pending')}</span>`;
@@ -42,14 +42,26 @@
       <div style="flex:1"></div>
       <div style="font-size:30px;font-weight:700;line-height:1.2;position:relative">${t('hero')}</div>
       <div style="font-size:16px;line-height:1.6;color:#D3DDF7;margin:12px 0 24px;position:relative">${t('heroSub')}</div>
-      <a href="#/login" class="btn" style="background:#1F6FEB;text-decoration:none;position:relative">${t('start')}</a>
+      <a href="#/signup" class="btn" style="background:#1F6FEB;text-decoration:none;position:relative">${t('start')}</a>
       <div style="text-align:center;margin-top:16px;position:relative"><a href="#/login" style="color:#D3DDF7;text-decoration:none">${t('haveAcc')}</a></div></div>`;
   }
 
+  let loginRole = 'student';
   function login() {
-    $app.innerHTML = `${top(t('welcome'), t('loginSub'))}<main><div class="card"><label>${t('sid')}</label><input id="sid" placeholder="${esc(t('sidPh'))}" autocapitalize="characters" autocomplete="username">
-      <label>${t('pw')}</label><input id="pw" type="password" autocomplete="current-password"><div class="err" id="err"></div><div style="height:12px"></div>
-      <button class="btn" id="go">${t('login')}</button></div><div class="muted">${t('newHint')}</div></main>`;
+    const tabBtn = (r, k) => `<button onclick="__role('${r}')" style="flex:1;border:0;border-radius:12px;padding:10px 0;font:700 14px inherit;font-family:inherit;cursor:pointer;${loginRole === r ? 'background:var(--blue);color:#fff' : 'background:transparent;color:var(--muted)'}">${t(k)}</button>`;
+    const logo = `<svg width="64" height="50" viewBox="0 0 72 56" aria-label="logo"><path d="M36 12C30 7 18 5 6 8V46C18 43 30 45 36 50Z" fill="#0D1B4C"/><path d="M36 12C42 7 54 5 66 8V46C54 43 42 45 36 50Z" fill="#1F5FD6"/><path d="M13 18c6-1 11 0 16 2M13 26c6-1 11 0 16 2M13 34c6-1 11 0 16 2M59 18c-6-1-11 0-16 2M59 26c-6-1-11 0-16 2M59 34c-6-1-11 0-16 2" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>`;
+    $app.innerHTML = `<div style="padding:10px 18px 0"><div class="row"><div class="sp"></div>${toggle(true)}</div></div>
+      <main><div style="text-align:center;margin-top:6px">${logo}<div style="font-size:20px;font-weight:700;color:var(--navy)">${t('academy')}</div><div style="font-size:14px;font-weight:600;color:var(--navy)">${t('tracker')}</div></div>
+      <div><div style="font-size:24px;font-weight:700">${t('welcomeBack')}</div><div class="muted">${t('loginSub2')}</div></div>
+      <div style="display:flex;background:#EAF0FB;border-radius:14px;padding:4px;gap:2px">${tabBtn('student', 'roleStudent')}${tabBtn('teacher', 'roleTeacher')}${tabBtn('parent', 'roleParent')}</div>
+      <div class="card"><label style="margin-top:0">${t('sidOrPhone')}</label><input id="sid" placeholder="${esc(t('phonePh'))}" autocapitalize="characters" autocomplete="username">
+      <label>${t('pw')}</label><div style="position:relative"><input id="pw" type="password" autocomplete="current-password" style="padding-right:64px"><button id="eye" type="button" style="position:absolute;right:8px;top:8px;height:32px;border:0;background:transparent;color:var(--blue);font:600 13px inherit;font-family:inherit;cursor:pointer">${t('showPw')}</button></div>
+      <div style="text-align:right;margin-top:8px"><a href="javascript:void(0)" id="fg" style="color:var(--blue);font-size:13px;font-weight:600;text-decoration:none">${t('forgot')}</a></div>
+      <div class="err" id="err"></div><div style="height:10px"></div><button class="btn" id="go">${t('login')}</button></div>
+      <div style="text-align:center"><a href="#/signup" style="color:var(--blue);font-weight:600;text-decoration:none">${t('noAcc')}</a></div></main>`;
+    window.__role = (r) => { loginRole = r; login(); };
+    document.getElementById('eye').onclick = () => { const p = document.getElementById('pw'); const show = p.type === 'password'; p.type = show ? 'text' : 'password'; };
+    document.getElementById('fg').onclick = () => { document.getElementById('err').textContent = t('forgotMsg'); };
     document.getElementById('go').onclick = async () => {
       const sid = document.getElementById('sid').value.trim().toLowerCase();
       const pw = document.getElementById('pw').value;
@@ -57,6 +69,8 @@
       if (error) { document.getElementById('err').textContent = t('badLogin'); return; }
       await boot();
       if (!me) { document.getElementById('err').textContent = 'Profile error: ' + (window.__bootErr || 'unknown'); return; }
+      const ok = loginRole === 'teacher' ? (me.role === 'teacher' || me.role === 'admin') : me.role === loginRole;
+      if (!ok) { await sb.auth.signOut(); me = null; document.getElementById('err').textContent = t('wrongRole'); return; }
       if (location.hash === '#/home') render(); else location.hash = '#/home';
     };
   }
@@ -69,8 +83,11 @@
       sb.from('homeworks').select('*').order('due_at').limit(20),
       sb.from('submissions').select('homework_id,status').eq('student_id', me.id)]);
     const sm = Object.fromEntries((subs.data || []).map((s) => [s.homework_id, s]));
+    const { data: myEn } = await sb.from('enrollments').select('id').eq('student_id', me.id).eq('status', 'approved').limit(1);
+    const hasBatch = !!(myEn && myEn.length);
     const pend = (hw.data || []).filter((h) => !sm[h.id] && new Date(h.due_at) > new Date()).slice(0, 3);
     $app.innerHTML = top(`${t('hello')}, ${me.full_name}`, me.student_code || '') + `<main>
+      ${hasBatch ? '' : `<a href="#/batches" class="card" style="text-decoration:none;color:inherit;background:var(--soft);border-color:#C9D8F6"><b style="color:var(--blue)">${t('joinPrompt')} ›</b></a>`}
       ${me.fee_due ? `<div class="card" style="background:#FDF0DC;border-color:#F3D9A8"><b style="color:#7A3A06">${t('feeDue')}</b></div>` : ''}
       <div class="card"><h3>${t('liveNow')}</h3>${(cl.data || []).length ? cl.data.map((c) => `<div class="row" style="margin:8px 0"><div class="sp"><b>${esc(c.title)}</b><div class="muted">${fmt(c.starts_at, { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dhaka' })} · ${esc(c.teacher_name || '')}</div></div>${c.meet_url ? `<a class="pill p-blue" style="text-decoration:none" href="${esc(c.meet_url)}" target="_blank" rel="noopener">${t('join')}</a>` : ''}</div>`).join('') : `<div class="muted">${t('noClass')}</div>`}</div>
       <div class="card"><h3>${t('due')}</h3>${pend.length ? pend.map((h) => `<a href="#/submit/${h.id}" style="text-decoration:none;color:inherit;display:flex;justify-content:space-between;margin:8px 0"><div><b>${esc(h.title)}</b><div class="muted">${esc(h.subject || '')} · ${fmt(h.due_at)}</div></div><span class="pill p-warn">${t('pending')}</span></a>`).join('') : `<div class="muted">${t('noHw')}</div>`}</div></main>${tabs('home')}`;
@@ -145,6 +162,47 @@
       <div class="muted">${s.ai_checked ? '✦ ' + t('aiNote') + '<br>' : ''}${t('imgDel')}</div></main>${tabs('hw')}`;
   }
 
+
+  function signup() {
+    $app.innerHTML = `${top(t('createAcc'), t('signupSub'))}<main><div class="card"><label>${t('fullName')}</label><input id="nm" autocomplete="name">
+      <label>${t('phone')}</label><input id="ph" type="tel" inputmode="numeric" placeholder="${esc(t('phonePh'))}" autocomplete="tel">
+      <label>${t('pw')}</label><input id="pw" type="password" autocomplete="new-password"><div class="err" id="err"></div><div style="height:12px"></div>
+      <button class="btn" id="go">${t('signup')}</button></div>
+      <div style="text-align:center"><a href="#/login" style="color:var(--blue);font-weight:600;text-decoration:none">${t('hasAcc')}</a></div></main>`;
+    document.getElementById('go').onclick = async () => {
+      const err = document.getElementById('err');
+      const nm = document.getElementById('nm').value.trim();
+      const ph = document.getElementById('ph').value.replace(/\D/g, '');
+      const pw = document.getElementById('pw').value;
+      if (!nm) { err.textContent = t('nameNeed'); return; }
+      if (!/^01\d{9}$/.test(ph)) { err.textContent = t('phoneBad'); return; }
+      if (pw.length < 6) { err.textContent = t('pwShort'); return; }
+      const btn = document.getElementById('go'); btn.disabled = true;
+      const { data, error } = await sb.auth.signUp({ email: `${ph}@${cfg.EMAIL_DOMAIN}`, password: pw, options: { data: { full_name: nm, phone: ph, lang } } });
+      btn.disabled = false;
+      if (error) { err.textContent = /registered|exists/i.test(error.message) ? t('exists') : error.message; return; }
+      if (!data.session) { err.textContent = t('err'); return; }
+      await boot();
+      if (!me) { err.textContent = 'Profile error: ' + (window.__bootErr || 'unknown'); return; }
+      location.hash = '#/batches';
+    };
+  }
+
+  async function batchesScreen() {
+    $app.innerHTML = top(t('batchesT'), '') + `<main>${t('loading')}</main>${tabs('batches')}`;
+    const [b, en] = await Promise.all([sb.from('batches').select('*').order('created_at'), sb.from('enrollments').select('*').eq('student_id', me.id)]);
+    const em = Object.fromEntries((en.data || []).map((e) => [e.batch_id, e]));
+    const list = (b.data || []).filter((x) => x.is_open || em[x.id]);
+    const act = (x) => { const e = em[x.id];
+      if (!e) return `<button class="btn" style="height:42px;font-size:15px" onclick="__join('${x.id}')">${t('reqJoin')}</button>`;
+      if (e.status === 'pending') return `<span class="pill p-warn">${t('pendingApproval')}</span>`;
+      if (e.status === 'approved') return `<span class="pill p-ok">${t('enrolled')}</span>`;
+      return `<span class="pill p-bad">${t('rejected')}</span>`; };
+    $app.innerHTML = top(t('batchesT'), '') + `<main>${list.length ? list.map((x) => `<div class="card"><div class="row"><div class="sp"><b style="font-size:16px">${esc(x.subject || x.name)}</b><div class="muted">${esc(x.name)}${x.teacher_name ? ' · ' + esc(x.teacher_name) : ''}</div></div></div>
+      ${x.description ? `<div class="muted" style="margin:8px 0">${esc(x.description)}</div>` : ''}${x.fee ? `<div class="muted">${t('monthly')}: <b style="color:var(--ink)">৳ ${num(x.fee)}</b></div>` : ''}<div style="margin-top:10px">${act(x)}</div></div>`).join('') : `<div class="muted">${t('noBatch')}</div>`}</main>${tabs('batches')}`;
+    window.__join = async (id) => { const { error } = await sb.from('enrollments').insert({ student_id: me.id, batch_id: id }); if (error && error.code !== '23505') { alert(t('err')); return; } batchesScreen(); };
+  }
+
   // ---------- Router ----------
   async function boot() {
     const { data } = await sb.auth.getSession();
@@ -160,10 +218,12 @@
       if (r === 'logout') { await sb.auth.signOut(); me = null; location.hash = '#/splash'; return; }
       if (r === 'splash') return splash();
       if (r === 'login') return login();
+      if (r === 'signup') return signup();
       if (!me) { location.hash = '#/login'; return; }
       if (r === 'home') return await home();
       if (r === 'classes') return await classesScreen();
       if (r === 'hw') return await hwList();
+      if (r === 'batches') return await batchesScreen();
       if (r === 'submit') return await submitScreen(id);
       if (r === 'result') return await result(id);
       location.hash = '#/home';
