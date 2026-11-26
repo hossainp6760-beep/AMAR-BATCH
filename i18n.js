@@ -1,0 +1,22 @@
+window.I18N = {
+ bn:{app:'আমার ব্যাচ',academy:'বর্গমূল একাডেমি',slogan:'শেখো · অনুশীলন করো · এগিয়ে যাও',hero:'আপনার একাডেমিক সাফল্যের সঙ্গী',heroSub:'হোমওয়ার্ক ট্র্যাক করুন, ক্লাসে যোগ দিন, পরীক্ষা দিন আর লক্ষ্যে পৌঁছান।',
+  start:'শুরু করুন',haveAcc:'আমার অ্যাকাউন্ট আছে',login:'লগইন',welcome:'স্বাগতম',loginSub:'চালিয়ে যেতে লগইন করুন',sid:'স্টুডেন্ট আইডি',sidPh:'যেমন: AB-2026-014',pw:'পাসওয়ার্ড',
+  newHint:'নতুন স্টুডেন্ট? আইডি আর পাসওয়ার্ড ভর্তির সময় একাডেমি থেকে দেওয়া হয়।',badLogin:'আইডি বা পাসওয়ার্ড ভুল',logout:'লগআউট',
+  home:'হোম',classes:'ক্লাস',hw:'হোমওয়ার্ক',exam:'পরীক্ষা',more:'আরও',hello:'শুভ দিন',liveNow:'আজকের ক্লাস',join:'ক্লাসে যোগ দিন',noClass:'আজ কোনো ক্লাস নেই',
+  due:'জমার তারিখ',noHw:'কোনো হোমওয়ার্ক নেই',submit:'খাতা জমা দিন',submitted:'জমা দিয়েছেন',checking:'চেক হচ্ছে',review:'টিচার দেখছেন',published:'ফল এসেছে',pending:'বাকি',late:'সময় শেষ',
+  takePhoto:'ছবি তুলুন / বাছুন',pages:'খাতার পাতা',remove:'মুছুন',send:'জমা দিন',sending:'জমা হচ্ছে…',needPhoto:'কমপক্ষে একটি ছবি দিন',done:'জমা হয়েছে ✓',
+  tip:'প্রতি পাতার উপরে নাম, রোল আর পাতা নম্বর লিখুন। শেষ উত্তর আন্ডারলাইন করুন। আলো ভালো রাখুন।',
+  marks:'প্রাপ্ত নম্বর',whyCut:'কেন কাটা গেল',aiNote:'AI-র সাহায্যে চেক, টিচারের যাচাইকৃত',imgDel:'খাতার ছবি কিছুদিন পর মুছে যাবে। নম্বর আর রিপোর্ট থেকে যাবে।',
+  back:'পেছনে',classesT:'আমার ক্লাস',recorded:'রেকর্ড',watch:'দেখুন',loading:'লোড হচ্ছে…',err:'কিছু একটা সমস্যা হয়েছে, আবার চেষ্টা করুন',noResult:'ফল এখনও আসেনি',total:'মোট',
+  feeDue:'বেতন বাকি আছে',offline:'ইন্টারনেট নেই'},
+ en:{app:'Amarbatch',academy:'Borgomul Academy',slogan:'Learn · Practice · Grow',hero:'Your Academic Success Partner',heroSub:'Track your homework, attend classes, take tests and achieve your goals.',
+  start:'Get Started',haveAcc:'I already have an account',login:'Log in',welcome:'Welcome',loginSub:'Log in to continue',sid:'Student ID',sidPh:'e.g. AB-2026-014',pw:'Password',
+  newHint:'New student? Your ID and password are given by the academy at admission.',badLogin:'Wrong ID or password',logout:'Log out',
+  home:'Home',classes:'Classes',hw:'Homework',exam:'Exams',more:'More',hello:'Hello',liveNow:"Today's classes",join:'Join class',noClass:'No class today',
+  due:'Due',noHw:'No homework',submit:'Submit script',submitted:'Submitted',checking:'Being checked',review:'Teacher reviewing',published:'Result in',pending:'Pending',late:'Closed',
+  takePhoto:'Take / choose photos',pages:'Script pages',remove:'Remove',send:'Submit',sending:'Submitting…',needPhoto:'Add at least one photo',done:'Submitted ✓',
+  tip:'Write your name, roll and page number at the top of every page. Underline the final answer. Keep good light.',
+  marks:'Marks obtained',whyCut:'Why marks were cut',aiNote:'Checked with AI help, verified by teacher',imgDel:'The script images will be deleted after a few days. Marks and report stay.',
+  back:'Back',classesT:'My classes',recorded:'Recordings',watch:'Watch',loading:'Loading…',err:'Something went wrong, please try again',noResult:'Result not out yet',total:'Total',
+  feeDue:'Fee is due',offline:'No internet'}
+};
