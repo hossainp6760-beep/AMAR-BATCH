@@ -13,7 +13,7 @@ main{flex:1;padding:14px 18px 90px;display:flex;flex-direction:column;gap:12px}
 .card h3{margin:0 0 6px;font-size:15px}.muted{color:var(--muted);font-size:13px}
 .btn{display:flex;align-items:center;justify-content:center;height:50px;border:0;border-radius:14px;background:var(--blue);color:#fff;font:700 16px inherit;font-family:inherit;width:100%;cursor:pointer}
 .btn.ghost{background:var(--soft);color:var(--blue)}.btn:disabled{opacity:.5}
-input{width:100%;height:48px;border:1px solid #CBD2E1;border-radius:12px;padding:0 14px;font:15px inherit;font-family:inherit;background:#fff}
+input,select{width:100%;height:48px;border:1px solid #CBD2E1;border-radius:12px;padding:0 14px;font:15px inherit;font-family:inherit;background:#fff}
 label{font-size:13px;font-weight:600;color:var(--muted);display:block;margin:10px 0 4px}
 .pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700}
 .p-ok{background:#E3F5EC;color:var(--ok)}.p-warn{background:#FDF0DC;color:var(--warn)}.p-bad{background:#FDE8E6;color:var(--bad)}.p-blue{background:var(--soft);color:var(--blue)}

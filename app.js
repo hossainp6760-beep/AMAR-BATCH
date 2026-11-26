@@ -27,7 +27,22 @@
   const BOOK = (w) => `<svg width="${w}" height="${w * 0.78}" viewBox="0 0 72 56" aria-label="logo"><path d="M36 12C30 7 18 5 6 8V46C18 43 30 45 36 50Z" fill="#fff"/><path d="M36 12C42 7 54 5 66 8V46C54 43 42 45 36 50Z" fill="#CFE0FF"/><path d="M13 18c6-1 11 0 16 2M13 26c6-1 11 0 16 2M13 34c6-1 11 0 16 2M59 18c-6-1-11 0-16 2M59 26c-6-1-11 0-16 2M59 34c-6-1-11 0-16 2" fill="none" stroke="#2B6FE0" stroke-width="2.2" stroke-linecap="round"/></svg>`;
 
   const tabs = (on) => `<nav>${[['home', '⌂', 'home'], ['classes', '▶', 'classes'], ['hw', '✎', 'hw'], ['batches', '☰', 'batches']].map(([r, i, k]) => `<a href="#/${r}" class="${on === r ? 'on' : ''}"><b>${i}</b>${t(k)}</a>`).join('')}<a href="#/logout"><b>⎋</b>${t('logout')}</a></nav>`;
-  const top = (title, sub, back) => `<div class="top"><div class="row">${back ? `<a href="#/${back}" style="color:#C9D3F0;text-decoration:none;font-weight:600">‹ ${t('back')}</a>` : ''}<div class="sp"></div>${toggle()}</div><h1>${esc(title)}</h1>${sub ? `<div class="sub">${esc(sub)}</div>` : ''}</div>`;
+  const top = (title, sub, back, av) => `<div class="top"><div class="row">${back ? `<a href="#/${back}" style="color:#C9D3F0;text-decoration:none;font-weight:600">‹ ${t('back')}</a>` : ''}<div class="sp"></div>${toggle()}</div>${av ? `<div class="row" style="gap:12px;align-items:center">${av}<div>` : ''}<h1>${esc(title)}</h1>${sub ? `<div class="sub">${esc(sub)}</div>` : ''}${av ? '</div></div>' : ''}</div>`;
+  const avatar = (p, size, edit) => {
+    const s = size || 48; const ini = esc(((p && p.full_name) || '?').trim().charAt(0).toUpperCase());
+    const inner = p && p.photo_url ? `<img src="${esc(p.photo_url)}" alt="" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover;display:block">`
+      : `<div style="width:${s}px;height:${s}px;border-radius:50%;background:#2B6FE0;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:${Math.round(s * 0.45)}px">${ini}</div>`;
+    return edit ? `<label style="cursor:pointer;display:block;flex:none" title="${esc(t('changePhoto'))}">${inner}<input id="avin" type="file" accept="image/*" hidden></label>` : `<div style="flex:none">${inner}</div>`;
+  };
+  async function uploadAvatar(uid, file) {
+    const blob = await shrink(file, 480);
+    const path = `${uid}/avatar.jpg`;
+    const { error } = await sb.storage.from('avatars').upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
+    if (error) return false;
+    const url = sb.storage.from('avatars').getPublicUrl(path).data.publicUrl + '?v=' + Date.now();
+    const { error: e2 } = await sb.from('profiles').update({ photo_url: url }).eq('id', uid);
+    return !e2;
+  }
   const statusPill = (s, due) => {
     if (!s) return due && new Date(due) < new Date() ? `<span class="pill p-bad">${t('late')}</span>` : `<span class="pill p-warn">${t('pending')}</span>`;
     const m = { submitted: ['p-blue', 'submitted'], checking: ['p-blue', 'checking'], review: ['p-warn', 'review'], published: ['p-ok', 'published'] }[s.status];
@@ -46,6 +61,7 @@
       <div style="text-align:center;margin-top:16px;position:relative"><a href="#/login" style="color:#D3DDF7;text-decoration:none">${t('haveAcc')}</a></div></div>`;
   }
 
+  const authEmail = (v) => (v.includes('@') ? v : `${v.replace(/\s/g, '')}@${cfg.EMAIL_DOMAIN}`);
   let loginRole = 'student';
   function login() {
     const tabBtn = (r, k) => `<button onclick="__role('${r}')" style="flex:1;border:0;border-radius:12px;padding:10px 0;font:700 14px inherit;font-family:inherit;cursor:pointer;${loginRole === r ? 'background:var(--blue);color:#fff' : 'background:transparent;color:var(--muted)'}">${t(k)}</button>`;
@@ -61,17 +77,33 @@
       <div style="text-align:center"><a href="#/signup" style="color:var(--blue);font-weight:600;text-decoration:none">${t('noAcc')}</a></div></main>`;
     window.__role = (r) => { loginRole = r; login(); };
     document.getElementById('eye').onclick = () => { const p = document.getElementById('pw'); const show = p.type === 'password'; p.type = show ? 'text' : 'password'; };
-    document.getElementById('fg').onclick = () => { document.getElementById('err').textContent = t('forgotMsg'); };
+    document.getElementById('fg').onclick = async () => {
+      const v = document.getElementById('sid').value.trim().toLowerCase(); const err = document.getElementById('err');
+      if (v.includes('@')) { const { error } = await sb.auth.resetPasswordForEmail(v, { redirectTo: location.origin + location.pathname }); err.style.color = error ? '' : 'var(--ok)'; err.textContent = error ? t('err') : t('resetSent'); }
+      else { err.style.color = ''; err.textContent = t('forgotMsg'); }
+    };
     document.getElementById('go').onclick = async () => {
       const sid = document.getElementById('sid').value.trim().toLowerCase();
       const pw = document.getElementById('pw').value;
-      const { error } = await sb.auth.signInWithPassword({ email: `${sid}@${cfg.EMAIL_DOMAIN}`, password: pw });
+      const { error } = await sb.auth.signInWithPassword({ email: authEmail(sid), password: pw });
       if (error) { document.getElementById('err').textContent = t('badLogin'); return; }
       await boot();
       if (!me) { document.getElementById('err').textContent = 'Profile error: ' + (window.__bootErr || 'unknown'); return; }
       const ok = loginRole === 'teacher' ? (me.role === 'teacher' || me.role === 'admin') : me.role === loginRole;
       if (!ok) { await sb.auth.signOut(); me = null; document.getElementById('err').textContent = t('wrongRole'); return; }
       if (location.hash === '#/home') render(); else location.hash = '#/home';
+    };
+  }
+
+
+  function resetScreen() {
+    $app.innerHTML = `${top(t('resetT'), '')}<main><div class="card"><label style="margin-top:0">${t('newPw')}</label><input id="np" type="password" autocomplete="new-password"><div class="err" id="err"></div><div style="height:10px"></div><button class="btn" id="go">${t('savePw')}</button></div></main>`;
+    document.getElementById('go').onclick = async () => {
+      const np = document.getElementById('np').value; const err = document.getElementById('err');
+      if (np.length < 6) { err.textContent = t('pwShort'); return; }
+      const { error } = await sb.auth.updateUser({ password: np });
+      if (error) { err.textContent = t('err'); return; }
+      await boot(); location.hash = me ? '#/home' : '#/login';
     };
   }
 
@@ -86,11 +118,13 @@
     const { data: myEn } = await sb.from('enrollments').select('id').eq('student_id', me.id).eq('status', 'approved').limit(1);
     const hasBatch = !!(myEn && myEn.length);
     const pend = (hw.data || []).filter((h) => !sm[h.id] && new Date(h.due_at) > new Date()).slice(0, 3);
-    $app.innerHTML = top(`${t('hello')}, ${me.full_name}`, me.student_code || '') + `<main>
+    $app.innerHTML = top(`${t('hello')}, ${me.full_name}`, me.role === 'teacher' ? (me.subject || '') : [me.student_code, me.class_level ? (me.class_level === 'admission' ? t('admissionOpt') : t('classWord') + ' ' + num(me.class_level)) : ''].filter(Boolean).join(' · '), null, avatar(me, 52, true)) + `<main>
       ${hasBatch ? '' : `<a href="#/batches" class="card" style="text-decoration:none;color:inherit;background:var(--soft);border-color:#C9D8F6"><b style="color:var(--blue)">${t('joinPrompt')} ›</b></a>`}
       ${me.fee_due ? `<div class="card" style="background:#FDF0DC;border-color:#F3D9A8"><b style="color:#7A3A06">${t('feeDue')}</b></div>` : ''}
       <div class="card"><h3>${t('liveNow')}</h3>${(cl.data || []).length ? cl.data.map((c) => `<div class="row" style="margin:8px 0"><div class="sp"><b>${esc(c.title)}</b><div class="muted">${fmt(c.starts_at, { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Dhaka' })} · ${esc(c.teacher_name || '')}</div></div>${c.meet_url ? `<a class="pill p-blue" style="text-decoration:none" href="${esc(c.meet_url)}" target="_blank" rel="noopener">${t('join')}</a>` : ''}</div>`).join('') : `<div class="muted">${t('noClass')}</div>`}</div>
       <div class="card"><h3>${t('due')}</h3>${pend.length ? pend.map((h) => `<a href="#/submit/${h.id}" style="text-decoration:none;color:inherit;display:flex;justify-content:space-between;margin:8px 0"><div><b>${esc(h.title)}</b><div class="muted">${esc(h.subject || '')} · ${fmt(h.due_at)}</div></div><span class="pill p-warn">${t('pending')}</span></a>`).join('') : `<div class="muted">${t('noHw')}</div>`}</div></main>${tabs('home')}`;
+    const avin = document.getElementById('avin');
+    if (avin) avin.onchange = async () => { if (!avin.files[0]) return; const ok = await uploadAvatar(me.id, avin.files[0]); if (ok) { await boot(); home(); } else alert(t('err')); };
   }
 
   async function classesScreen() {
@@ -108,10 +142,10 @@
   }
 
   // Resize to max 1600px JPEG ~0.72
-  function shrink(file) {
+  function shrink(file, maxPx) {
     return new Promise((res, rej) => {
       const img = new Image(); const u = URL.createObjectURL(file);
-      img.onload = () => { const m = 1600, r = Math.min(1, m / Math.max(img.width, img.height)); const c = document.createElement('canvas');
+      img.onload = () => { const m = maxPx || 1600, r = Math.min(1, m / Math.max(img.width, img.height)); const c = document.createElement('canvas');
         c.width = Math.round(img.width * r); c.height = Math.round(img.height * r); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
         URL.revokeObjectURL(u); c.toBlob((b) => (b ? res(b) : rej(new Error('blob'))), 'image/jpeg', 0.72); };
       img.onerror = rej; img.src = u;
@@ -163,29 +197,62 @@
   }
 
 
+  let signRole = 'student';
   function signup() {
-    $app.innerHTML = `${top(t('createAcc'), t('signupSub'))}<main><div class="card"><label>${t('fullName')}</label><input id="nm" autocomplete="name">
-      <label>${t('phone')}</label><input id="ph" type="tel" inputmode="numeric" placeholder="${esc(t('phonePh'))}" autocomplete="tel">
+    const chip = (r, k) => `<button onclick="__srole('${r}')" style="flex:1;border:0;border-radius:12px;padding:10px 0;font:700 14px inherit;font-family:inherit;cursor:pointer;${signRole === r ? 'background:var(--blue);color:#fff' : 'background:transparent;color:var(--muted)'}">${t(k)}</button>`;
+    const keep = (id) => { const e = document.getElementById(id); return e ? esc(e.value) : ''; };
+    const v = { nm: keep('nm'), ph: keep('ph'), em: keep('em'), sj: keep('sj'), sc: keep('sc') };
+    const clsOpts = ['5','6','7','8','9','10','11','12','admission'].map((c) => `<option value="${c}">${c === 'admission' ? t('admissionOpt') : t('classWord') + ' ' + num(c)}</option>`).join('');
+    $app.innerHTML = `${top(t('createAcc'), t('signupSub'))}<main><div class="card">
+      <div style="display:flex;gap:4px;background:var(--soft);border-radius:14px;padding:4px;margin-bottom:6px">${chip('student', 'roleStudent')}${chip('teacher', 'roleTeacher')}${chip('parent', 'roleParent')}</div>
+      <label>${t('fullName')}</label><input id="nm" autocomplete="name" value="${v.nm}">
+      <label>${t('phone')}</label><input id="ph" type="tel" inputmode="numeric" placeholder="${esc(t('phonePh'))}" autocomplete="tel" value="${v.ph}">
+      ${signRole === 'student' ? `<label>${t('classLbl')}</label><select id="cl"><option value="">${t('classPick')}</option>${clsOpts}</select>` : ''}
+      ${signRole === 'teacher' ? `<label>${t('subjectLbl')}</label><input id="sj" placeholder="${esc(t('subjectPh'))}" value="${v.sj}"><div class="muted" style="font-size:12px;margin-top:4px">${t('teacherNote')}</div>` : ''}
+      ${signRole === 'parent' ? `<label>${t('childId')}</label><input id="sc" placeholder="AB-2026-015" autocapitalize="characters" value="${v.sc}"><div class="muted" style="font-size:12px;margin-top:4px">${t('childIdHint')}</div>` : ''}
+      <label>${t('emailLbl')}</label><input id="em" type="email" autocomplete="email" value="${v.em}"><div class="muted" style="font-size:12px;margin-top:4px">${t('emailHint')}</div>
+      <label>${t('photoOpt')}</label><input id="pic" type="file" accept="image/*">
       <label>${t('pw')}</label><input id="pw" type="password" autocomplete="new-password"><div class="err" id="err"></div><div style="height:12px"></div>
       <button class="btn" id="go">${t('signup')}</button></div>
       <div style="text-align:center"><a href="#/login" style="color:var(--blue);font-weight:600;text-decoration:none">${t('hasAcc')}</a></div></main>`;
+    window.__srole = (r) => { signRole = r; signup(); };
     document.getElementById('go').onclick = async () => {
       const err = document.getElementById('err');
       const nm = document.getElementById('nm').value.trim();
       const ph = document.getElementById('ph').value.replace(/\D/g, '');
       const pw = document.getElementById('pw').value;
+      const em = document.getElementById('em').value.trim().toLowerCase();
+      const sj = signRole === 'teacher' ? document.getElementById('sj').value.trim() : '';
+      const sc = signRole === 'parent' ? document.getElementById('sc').value.trim().toUpperCase() : '';
+      const cl = signRole === 'student' ? document.getElementById('cl').value : '';
+      const pic = document.getElementById('pic').files[0];
       if (!nm) { err.textContent = t('nameNeed'); return; }
       if (!/^01\d{9}$/.test(ph)) { err.textContent = t('phoneBad'); return; }
+      if (signRole === 'teacher' && !sj) { err.textContent = t('subjectNeed'); return; }
+      if (signRole === 'student' && !cl) { err.textContent = t('classNeed'); return; }
       if (pw.length < 6) { err.textContent = t('pwShort'); return; }
       const btn = document.getElementById('go'); btn.disabled = true;
-      const { data, error } = await sb.auth.signUp({ email: `${ph}@${cfg.EMAIL_DOMAIN}`, password: pw, options: { data: { full_name: nm, phone: ph, lang } } });
+      if (signRole === 'parent') {
+        if (!sc) { err.textContent = t('childIdNeed'); btn.disabled = false; return; }
+        const { data: ok } = await sb.rpc('student_exists', { code: sc });
+        if (!ok) { err.textContent = t('childIdBad'); btn.disabled = false; return; }
+      }
+      const { data, error } = await sb.auth.signUp({ email: em || `${ph}@${cfg.EMAIL_DOMAIN}`, password: pw, options: { data: { full_name: nm, phone: ph, lang, role: signRole, subject: sj, class_level: cl } } });
+      if (error) { btn.disabled = false; err.textContent = /registered|exists/i.test(error.message) ? t('exists') : error.message; return; }
+      if (!data.session) { btn.disabled = false; err.textContent = t('err'); return; }
+      if (signRole === 'parent') { const { data: linked } = await sb.rpc('link_parent', { code: sc }); if (!linked) { btn.disabled = false; err.textContent = t('childIdBad'); return; } }
+      if (pic) { try { await uploadAvatar(data.session.user.id, pic); } catch (e) {} }
       btn.disabled = false;
-      if (error) { err.textContent = /registered|exists/i.test(error.message) ? t('exists') : error.message; return; }
-      if (!data.session) { err.textContent = t('err'); return; }
       await boot();
       if (!me) { err.textContent = 'Profile error: ' + (window.__bootErr || 'unknown'); return; }
-      location.hash = '#/batches';
+      location.hash = me.role === 'student' ? '#/batches' : '#/home';
     };
+  }
+
+  function pendingScreen() {
+    $app.innerHTML = `${top(t('pendT'), me.full_name)}<main><div class="card"><div style="text-align:center;padding:8px 0">${avatar(me, 72).replace('<div style="flex:none">', '<div style="display:inline-block">')}<h3 style="margin:12px 0 6px">${t('pendH')}</h3><div class="muted">${t('pendMsg')}</div></div></div>
+      <button class="btn" id="rf">${t('recheck')}</button><div style="height:10px"></div><a href="#/logout" style="display:block;text-align:center;color:var(--blue);font-weight:600;text-decoration:none">${t('logout')}</a></main>`;
+    document.getElementById('rf').onclick = async () => { await boot(); render(); };
   }
 
   async function batchesScreen() {
@@ -219,7 +286,9 @@
       if (r === 'splash') return splash();
       if (r === 'login') return login();
       if (r === 'signup') return signup();
+      if (r === 'reset') return resetScreen();
       if (!me) { location.hash = '#/login'; return; }
+      if (me.role === 'teacher' && !me.approved) return pendingScreen();
       if (r === 'home') return await home();
       if (r === 'classes') return await classesScreen();
       if (r === 'hw') return await hwList();
@@ -229,6 +298,7 @@
       location.hash = '#/home';
     } catch (e) { $app.innerHTML = `<main><div class="card">${t('err')}</div></main>`; console.error(e); }
   }
+  sb.auth.onAuthStateChange((ev) => { if (ev === 'PASSWORD_RECOVERY') location.hash = '#/reset'; });
   window.addEventListener('hashchange', render);
   window.addEventListener('storage', (e) => { if (e.key === 'amb_lang' && (e.newValue === 'bn' || e.newValue === 'en')) { lang = e.newValue; render(); } });
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
